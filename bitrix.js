@@ -45,7 +45,7 @@ const client = `<script>
  });
 })();
 </script>`;
-function bootstrap(install) {
+function bootstrap() {
  return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>Вход через Bitrix24</title></head><body><p id="status">Подключение к Bitrix24…</p><script>
 (function(){
  function fail(message){document.getElementById('status').textContent=message;}
@@ -53,8 +53,8 @@ function bootstrap(install) {
  var timer=setTimeout(function(){fail('Bitrix24 не ответил. Откройте приложение заново.');},10000);
  var sdk=document.createElement('script');sdk.src='https://api.bitrix24.com/api/v1/';sdk.onerror=function(){clearTimeout(timer);fail('Не удалось загрузить SDK Bitrix24.');};
  sdk.onload=function(){
- ${install ? "BX24.install(function(){BX24.installFinish();});" : ''}
  BX24.init(function(){
+ BX24.installFinish();
  BX24.callMethod('user.current',{},function(result){
  if(result.error()){clearTimeout(timer);fail('Не удалось получить пользователя Bitrix24.');return;}
  var user=result.data();var login=user.EMAIL||user.PERSONAL_PHONE||user.PHONE||user.LOGIN||user.ID;

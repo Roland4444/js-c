@@ -1844,12 +1844,11 @@ const server = http.createServer((req, res) => {
     res.setHeader('Referrer-Policy', 'no-referrer');
     if (url.pathname === '/healthz') { res.writeHead(200); return res.end('ok'); }
     if (url.pathname === '/auth/bitrix' && req.method === 'POST') return bitrix.authenticate(req, res);
-    if (url.pathname === '/install') { res.writeHead(200, {'Content-Type':'text/html; charset=utf-8'}); return res.end(bitrix.bootstrap(true)); }
     const u = bitrix.identity(req, url);
     if (!u) {
       const isPage = url.pathname === '/' && (req.method === 'GET' || req.method === 'POST');
       res.writeHead(isPage ? 200 : 401, {'Content-Type': isPage ? 'text/html; charset=utf-8' : 'application/json'});
-      return res.end(isPage ? bitrix.bootstrap(false) : JSON.stringify({ok:false,error:'Требуется вход через Bitrix24'}));
+      return res.end(isPage ? bitrix.bootstrap() : JSON.stringify({ok:false,error:'Требуется вход через Bitrix24'}));
     }
     const map = await loadRoles(); // сервер → config (или fallback config)
     const idNum = (u.id != null && String(u.id) !== '') ? Number(u.id) : NaN;
