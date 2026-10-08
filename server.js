@@ -1607,7 +1607,7 @@ async function itogRecalc(){
   var btn=document.getElementById('itogrecalc');
   if(btn){btn.disabled=true;btn.textContent='Пересчитываю…';}
   try{
-    var resp=await fetch('/itog',{headers:{'X-Vibe-No-Cache':'1'}});
+    var resp=await fetch('./itog',{headers:{'X-Vibe-No-Cache':'1'}});
     var j=await resp.json();
     if(!j||!j.ok){throw new Error('bad resp');}
     var tb=document.querySelector('#itog-table tbody');
@@ -1659,7 +1659,7 @@ async function saveEdits(vid){
   var st=document.getElementById('save-status');
   st.textContent='Сохранение…';
   try{
-    var res=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    var res=await fetch('./save',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({vid:vid,rows:rows})});
     var j=await res.json();
     st.textContent=j.ok?('Сохранено ✓ '+new Date().toLocaleTimeString('ru-RU')):('Ошибка: '+j.error);
@@ -1674,7 +1674,7 @@ async function saveSprav(){
   var st=document.getElementById('sprav-status');
   st.textContent='Сохранение…';
   try{
-    var res=await fetch('/save-sprav',{method:'POST',headers:{'Content-Type':'application/json'},
+    var res=await fetch('./save-sprav',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({values:values})});
     var j=await res.json();
     st.textContent=j.ok?('Сохранено ✓ '+new Date().toLocaleTimeString('ru-RU')):('Ошибка: '+j.error);
@@ -1690,7 +1690,7 @@ async function saveMatrixK(){
   var st=document.getElementById('matrixk-status');
   st.textContent='Сохранение…';
   try{
-    var res=await fetch('/save-matrixk',{method:'POST',headers:{'Content-Type':'application/json'},
+    var res=await fetch('./save-matrixk',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({values:values})});
     var j=await res.json();
     st.textContent=j.ok?('Сохранено ✓ '+new Date().toLocaleTimeString('ru-RU')):('Ошибка: '+j.error);
@@ -1732,7 +1732,7 @@ async function saveMatrix(){
   var st=document.getElementById('mx-status');
   if(st) st.textContent='Сохранение…';
   try{
-    var res=await fetch('/save-matrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var res=await fetch('./save-matrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var j=await res.json();
     if(j.ok){ if(st) st.textContent='Сохранено ✓'; setTimeout(function(){window.location.reload();},300); }
     else { if(st) st.textContent='Ошибка: '+j.error; }
@@ -1747,7 +1747,7 @@ async function importProject(){
   if(st)st.textContent='Импортирую…';
   try{
     var buf=await f.arrayBuffer();
-    var res=await fetch('/import-project',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:buf});
+    var res=await fetch('./import-project',{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:buf});
     var j=await res.json();
     if(j&&j.ok){ if(st)st.textContent='Проект "'+j.project+'" импортирован ✓'; setTimeout(function(){window.location='?tab=матрицы&project='+encodeURIComponent(j.project);},400); }
     else { if(st)st.textContent='Ошибка: '+(j&&j.error||'неизвестная'); }
@@ -1774,7 +1774,7 @@ async function doDelProject(){
   var st=document.getElementById('mx-status'); if(st)st.textContent='Удаляю…';
   closeMxModal();
   try{
-    var res=await fetch('/delete-project',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:p})});
+    var res=await fetch('./delete-project',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:p})});
     var j=await res.json();
     if(j&&j.ok){ if(st)st.textContent='Проект удалён ✓'; setTimeout(function(){window.location.reload();},300); }
     else { if(st)st.textContent='Ошибка: '+(j&&j.error||'неизвестная'); }
@@ -1806,7 +1806,7 @@ async function saveFounderNow(){
   if(sale.value!=='') payload.sale=parseFloat(sale.value);
   if(down.value!=='') payload.down=parseFloat(down.value);
   try{
-    var res=await fetch('/save-founder',{method:'POST',headers:{'Content-Type':'application/json'},
+    var res=await fetch('./save-founder',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)});
     await res.json();
   }catch(e){}

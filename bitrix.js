@@ -59,7 +59,7 @@ function bootstrap(install) {
  if(result.error()){clearTimeout(timer);fail('Не удалось получить пользователя Bitrix24.');return;}
  var user=result.data();var login=user.EMAIL||user.PERSONAL_PHONE||user.PHONE||user.LOGIN||user.ID;
  var auth=BX24.getAuth();if(!auth){clearTimeout(timer);fail('Нет авторизации Bitrix24.');return;}
- fetch('/auth/bitrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:auth.domain,access_token:auth.access_token})}).then(function(r){return r.json();}).then(function(data){clearTimeout(timer);if(!data.token)throw new Error(data.error||'Ошибка авторизации');sessionStorage.setItem('calculator.session',data.token);var target=new URL(location.href);target.pathname='/';target.searchParams.delete('_session');target.searchParams.set('_session',data.token);location.replace(target.href);}).catch(function(e){clearTimeout(timer);fail(e.message);});
+ fetch('./auth/bitrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:auth.domain,access_token:auth.access_token})}).then(function(r){return r.json();}).then(function(data){clearTimeout(timer);if(!data.token)throw new Error(data.error||'Ошибка авторизации');sessionStorage.setItem('calculator.session',data.token);var target=new URL('./',location.href);target.search=location.search;target.searchParams.delete('_session');target.searchParams.set('_session',data.token);location.replace(target.href);}).catch(function(e){clearTimeout(timer);fail(e.message);});
  });});};document.head.appendChild(sdk);
 })();</script></body></html>`;
 }
