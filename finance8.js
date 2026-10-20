@@ -44,7 +44,7 @@ function block(q,result) {
  const out=(label,k,row)=>`<div class="f8-label f8-expense" style="grid-row:${row}">${label}</div><div class="f8-value" style="grid-row:${row}" data-fin-out="${k}">${fmt(computed[k])}</div>`;
  return `<section id="finance8" data-context="${esc(JSON.stringify([q.project,q.planning,q.vid]))}" data-area="${esc(area)}" data-cost="${esc(cost)}" data-agent="${rates.agent}" data-overhead="${rates.overhead}">
  <div class="f8-scroll"><div class="f8-grid">
- ${field('Сумма первоначального взноса, ₽','down',1)}
+ ${field('Сумма первоначального взноса*','down',1)}
  ${field('Сумма субсидии, ₽','subsidy',2)}
  ${out('Агентское вознаграждение, ₽','agent',3)}
  ${out('Накладные расходы, ₽','overhead',4)}
@@ -67,6 +67,7 @@ const css=`
 #finance8 .f8-grid{display:grid;grid-template-columns:82fr 115.25fr 159fr 129.25fr 154.66fr 62.75fr 92.5fr 115.25fr 119.66fr 106.5fr 119.66fr 124.91fr;grid-template-rows:repeat(5,minmax(40px,auto)) repeat(2,minmax(48px,auto));min-width:850px;border-top:1px solid #97A2B3;border-left:1px solid #97A2B3}
 #finance8 .f8-grid>*{box-sizing:border-box;border-right:1px solid #97A2B3;border-bottom:1px solid #97A2B3;display:flex;align-items:center;min-width:0;margin:0}
 #finance8 .f8-label{padding:8px 10px;background:#F2F4F7;color:#0F3372;font-size:12px;font-weight:700;justify-content:flex-end;text-align:right;line-height:1.3}
+#finance8 .f8-grid .f8-label{display:block!important;text-align:right!important;align-content:center;justify-self:stretch;padding:8px 10px!important}
 #finance8 .f8-expense{grid-column:1/6}
 #finance8 .f8-value{grid-column:6/8;justify-content:flex-end;background:#28496D;color:white;font-size:17px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;padding:6px;overflow-wrap:anywhere}
 #finance8 input[type=number]{width:100%;max-width:100%;box-sizing:border-box;min-width:0;border:1px solid transparent;border-radius:0;background:#28496D;color:white;text-align:right;font:inherit;padding:3px;appearance:textfield;-moz-appearance:textfield}
