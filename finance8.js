@@ -40,13 +40,52 @@ const fmt = v=>v==null?'—':Number(v).toLocaleString('ru-RU',{minimumFractionDi
 function block(q,result) {
  const input=get(q),rates=state.rates,area=result?result.S:null,cost=result?result.totalCost:null;
  const computed=calculate(input,rates,area,cost);
- const field=(label,k)=>`<tr><td>${label}</td><td><input type="number" min="0" step="0.01" data-fin-input="${k}" value="${esc(input[k])}"></td></tr>`;
- const out=(label,k)=>`<tr><td>${label}</td><td data-fin-out="${k}" class="num">${fmt(computed[k])}</td></tr>`;
- return `<section class="card" id="finance8" data-context="${esc(JSON.stringify([q.project,q.planning,q.vid]))}" data-area="${esc(area)}" data-cost="${esc(cost)}" data-agent="${rates.agent}" data-overhead="${rates.overhead}"><h2>Стоимость квартиры — финансовый расчёт</h2>
- <table class="detail"><tbody>${field('Стоимость квартиры по договору, ₽','sale')}${field('Сумма первоначального взноса, ₽','down')}${field('Сумма субсидии, ₽','subsidy')}${out('Агентское вознаграждение, ₽','agent')}${out('Накладные расходы, ₽','overhead')}${field('Скидка, ₽ (справочно, в итог не включена)','discount')}
- <tr><td>Общая себестоимость работы/пакета отделки, ₽</td><td class="num">${fmt(cost)}</td></tr>${out('Итоговая стоимость квартиры после вычета расходов, ₽','net')}${out('Стоимость квартиры без отделки, ₽/м²','perM2')}</tbody></table>
- <p class="hint">Пустые взнос и субсидия считаются нулём. Без стоимости квартиры или при нулевой/неизвестной площади итог не рассчитывается. Себестоимость отделки вычитается один раз.</p><button type="button" class="btn" id="fin-save">Сохранить финансовые данные</button> <span id="fin-status" role="status"></span></section>`;
+ const field=(label,k,row)=>`<label class="f8-label f8-expense" style="grid-row:${row}" for="fin-${k}">${label}</label><div class="f8-value" style="grid-row:${row}"><input id="fin-${k}" aria-label="${label}" type="number" min="0" step="0.01" data-fin-input="${k}" value="${esc(input[k])}"></div>`;
+ const out=(label,k,row)=>`<div class="f8-label f8-expense" style="grid-row:${row}">${label}</div><div class="f8-value" style="grid-row:${row}" data-fin-out="${k}">${fmt(computed[k])}</div>`;
+ return `<section id="finance8" data-context="${esc(JSON.stringify([q.project,q.planning,q.vid]))}" data-area="${esc(area)}" data-cost="${esc(cost)}" data-agent="${rates.agent}" data-overhead="${rates.overhead}">
+ <div class="f8-scroll"><div class="f8-grid">
+ ${field('Сумма первоначального взноса, ₽','down',1)}
+ ${field('Сумма субсидии, ₽','subsidy',2)}
+ ${out('Агентское вознаграждение, ₽','agent',3)}
+ ${out('Накладные расходы, ₽','overhead',4)}
+ ${field('Скидка, ₽','discount',5)}
+ <div class="f8-empty" aria-hidden="true"></div>
+ <div class="f8-title">СТОИМОСТЬ КВАРТИРЫ</div>
+ <label class="f8-label f8-sale-label" for="fin-sale">Стоимость квартиры по договору, ₽</label>
+ <div class="f8-value f8-sale"><input id="fin-sale" aria-label="Стоимость квартиры по договору, ₽" type="number" min="0" step="0.01" data-fin-input="sale" value="${esc(input.sale)}"></div>
+ <div class="f8-label f8-net-label">Итоговая стоимость квартиры, ₽</div>
+ <div class="f8-value f8-net" data-fin-out="net">${fmt(computed.net)}</div>
+ <div class="f8-label f8-meter-label">Стоимость квартиры по договору без отделки, ₽/кв. м</div>
+ <div class="f8-value f8-meter" data-fin-out="perM2">${fmt(computed.perM2)}</div>
+ </div></div>
+ <div class="f8-actions"><button type="button" class="btn" id="fin-save">Сохранить финансовые данные</button> <span id="fin-status" role="status"></span></div>
+ <p class="hint f8-note">Скидка сохраняется справочно и не вычитается из итога.</p></section>`;
 }
+const css=`
+#finance8{margin:10px 14px;font-family:Arial,sans-serif}
+#finance8 .f8-scroll{overflow-x:auto}
+#finance8 .f8-grid{display:grid;grid-template-columns:82fr 115.25fr 159fr 129.25fr 154.66fr 62.75fr 92.5fr 115.25fr 119.66fr 106.5fr 119.66fr 124.91fr;grid-template-rows:repeat(5,minmax(40px,auto)) repeat(2,minmax(48px,auto));min-width:850px;border-top:1px solid #97A2B3;border-left:1px solid #97A2B3}
+#finance8 .f8-grid>*{box-sizing:border-box;border-right:1px solid #97A2B3;border-bottom:1px solid #97A2B3;display:flex;align-items:center;min-width:0;margin:0}
+#finance8 .f8-label{padding:8px 10px;background:#F2F4F7;color:#0F3372;font-size:12px;font-weight:700;justify-content:flex-end;text-align:right;line-height:1.3}
+#finance8 .f8-expense{grid-column:1/6}
+#finance8 .f8-value{grid-column:6/8;justify-content:flex-end;background:#28496D;color:white;font-size:17px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;padding:6px;overflow-wrap:anywhere}
+#finance8 input[type=number]{width:100%;max-width:100%;box-sizing:border-box;min-width:0;border:1px solid transparent;border-radius:0;background:#28496D;color:white;text-align:right;font:inherit;padding:3px;appearance:textfield;-moz-appearance:textfield}
+#finance8 input::-webkit-inner-spin-button,#finance8 input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#finance8 input:focus{outline:2px solid #fff;outline-offset:-2px}
+#finance8 .f8-empty{grid-column:8/13;grid-row:1/6;background:#F2F4F7}
+#finance8 .f8-title{grid-column:1/3;grid-row:6/8;background:#0A5A79;color:white;padding:10px;text-align:center;justify-content:center;font-size:13px;font-weight:700}
+#finance8 .f8-sale-label{grid-column:3/6;grid-row:6}
+#finance8 .f8-sale{grid-row:6}
+#finance8 .f8-net-label{grid-column:3/6;grid-row:7}
+#finance8 .f8-net{grid-row:7;background:#CC0000}
+#finance8 .f8-meter-label{grid-column:8/11;grid-row:6/8}
+#finance8 .f8-meter{grid-column:11/13;grid-row:6/8;background:#CC0000;font-size:15px}
+#finance8 .f8-actions{display:flex;align-items:center;gap:10px;padding-top:10px}
+#finance8 .f8-note{margin:8px 0}
+#finance8-rates input{max-width:100%;box-sizing:border-box;padding:7px;border:1px solid #B9C4D4;border-radius:3px;background:#D1E5F4}
+#finance8-rates label{display:inline-block;margin:8px}
+`;
+
 function rates() {return `<section class="card" id="finance8-rates"><h2>Финансовые ставки — роль 8</h2><label>Агентское вознаграждение, % <input type="number" min="0" max="100" step="any" id="fin-rate-agent" value="${state.rates.agent*100}"></label> <label>Накладные расходы, ₽/м² <input type="number" min="0" step="any" id="fin-rate-overhead" value="${state.rates.overhead}"></label><p class="hint">Общие ставки для финансового блока роли 8. Коэффициенты отделки не изменяются.</p><button class="btn" type="button" id="fin-rates-save">Сохранить ставки</button> <span id="fin-rates-status" role="status"></span></section>`;}
 const client=`(function(){
  var box=document.getElementById('finance8');if(!box)return;
@@ -65,4 +104,4 @@ const client=`(function(){
  var ratesButton=document.getElementById('fin-rates-save');if(ratesButton)ratesButton.onclick=async function(){var output=document.getElementById('fin-rates-status');try{var a=document.getElementById('fin-rate-agent'),o=document.getElementById('fin-rate-overhead');if(!a.checkValidity()||!o.checkValidity())throw Error('Проверьте ставки');var agent=number(a.value),overhead=number(o.value);if(agent===null||overhead===null)throw Error('Заполните обе ставки');await save({kind:'rates',agent:agent/100,overhead:overhead});box.dataset.agent=agent/100;box.dataset.overhead=overhead;recompute();output.textContent='Ставки сохранены';}catch(e){output.textContent=e.message;}};
  recompute();
 })();`;
-module.exports={calculate,save,block,rates,client};
+module.exports={calculate,save,block,rates,client,css};

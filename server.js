@@ -1302,10 +1302,7 @@ ${role.finance8 ? finance8.client : ''}
 }
 
 const CSS = `
-#finance8 input,#finance8-rates input{max-width:100%;box-sizing:border-box;padding:7px;border:1px solid #B9C4D4;border-radius:3px;background:#D1E5F4}
-#finance8 td:first-child{width:65%}
-#finance8 [data-fin-out="net"],#finance8 [data-fin-out="perM2"]{background:#FFF2C1;font-weight:bold}
-#finance8-rates label{display:inline-block;margin:8px}
+${finance8.css}
 
 :root{
   --brand:#0A5A79;          /* заголовочная плашка Excel */
