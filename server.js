@@ -14,6 +14,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 
 const bitrix = require('./bitrix');
+const finance8 = require('./finance8');
 const DIR = process.env.DATA_DIR || __dirname;
 const PORT = process.env.PORT || 3000;
 
@@ -444,7 +445,8 @@ function areaCoeff(S, rows) {
 // работы/пакета.
 const ROLES_URL = process.env.ROLES_URL || '';
 const ROLES_FILE = path.join(DIR, 'roles.json');
-const ROLES_DEF = { "1": [], "2": [], "3": [], "4": [], "5": [], "6": [] };
+// Роль 8 — расширенный финансовый блок; назначается только через роли, без принудительных ID.
+const ROLES_DEF = { "1": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [] };
 // Роль 5 (debug): включает выделение текста, копирование и красную кнопку «Скопировать»
 // (дамп таблицы «как в Excel» для сверки). Назначается серверно — не зависит от внешнего
 // сервиса ролей, чтобы его нельзя было затереть удалённым ответом.
@@ -516,12 +518,14 @@ function roleFromCaps(caps, idNum, name) {
   const admin = has('3') || has('4');
   const editMatrix = has('6');
   const founder = has('7');
+  const finance8 = has('8');
   const canViewDetail = has('2') || admin || editMatrix;
   const editMaterials = has('3');
   const editCost = has('4');
   const debug = has('5');
   let level;
   if (editMatrix) level = 6; // роль 6 — админ матриц (объёмы, планировки, строки работ)
+  else if (finance8) level = 8;
   else if (founder) level = 7; // роль 7 — учредители (блок «СТОИМОСТЬ КВАРТИРЫ» в Калькуляторе)
   else if (admin) level = 3;
   else if (has('2')) level = 2;
@@ -529,7 +533,7 @@ function roleFromCaps(caps, idNum, name) {
   else if (has('5')) level = 5;
   else level = 0; // нет прав → отказ в доступе
   const denied = level === 0;
-  return { level, denied, admin, debug, founder, caps: [...caps], canViewDetail, editMaterials, editCost, editMatrix, name: (name || (Number.isNaN(idNum) ? null : String(idNum))), id: idNum };
+  return { level, denied, admin, debug, founder, finance8, caps: [...caps], canViewDetail, editMaterials, editCost, editMatrix, name: (name || (Number.isNaN(idNum) ? null : String(idNum))), id: idNum };
 }
 function accessDeniedPage(role) {
   const who = role && role.name ? esc(role.name) : 'Пользователь';
@@ -1037,7 +1041,7 @@ function calcFormHtml(role, data, q, result, flash) {
       <div class="xlscard left"><div class="xls-grid">${paramsTable}</div></div>
       <div class="xlscard right"><div class="xls-grid">${costTable}</div></div>
     </div>
-    ${role.founder ? founderBlockHtml(data, q, result) : ''}
+    ${role.finance8 ? finance8.block(q, result) : role.founder ? founderBlockHtml(data, q, result) : ''}
     ${role.canViewDetail ? `
     <div class="xls-sec">СОСТАВ ПАКЕТА ОТДЕЛКИ</div>
     ${result ? detailFullTable(result, role, q, Ktot) : `<div class="hint">Выберите параметры для расчёта.</div>`}
@@ -1251,11 +1255,12 @@ function page(uid, role, data, q, result, flash, tab) {
   // Матрица доступа по вкладкам:
   // роли 1, 2, 3 — «Калькулятор»; роль 4 — «Расчёт», «Справочник» и «Калькулятор» (просмотр).
   const capsS = new Set(role.caps);
-  const canCalc = capsS.has('1') || capsS.has('2') || capsS.has('3') || capsS.has('4') || capsS.has('5') || capsS.has('6') || capsS.has('7');
+  const canCalc = capsS.has('1') || capsS.has('2') || capsS.has('3') || capsS.has('4') || capsS.has('5') || capsS.has('6') || capsS.has('7') || role.finance8;
   const canMisc = capsS.has('4');
   const tabIds = [];
   if (canCalc) tabIds.push('калькулятор');
-  if (canMisc) { tabIds.push('расчёт'); tabIds.push('справочник'); }
+  if (canMisc || role.finance8) tabIds.push('расчёт');
+  if (canMisc) tabIds.push('справочник');
   if (role.editMatrix) tabIds.push('матрицы'); // роль 6 — администрирование матриц
   if (role.editMatrix) tabIds.push('матрица-к'); // роль 6 — матрица коэффициентов ценообразования К1..К4
   if (role.debug) tabIds.push('итог'); // роль 5 (debug) — сводная калькуляция по всем проектам
@@ -1275,14 +1280,14 @@ ${CSS}
 <div class="top"><div class="brand">🧮 Калькулятор отделки</div>${role.debug ? `<button id="copybtn" class="copyred" onclick="copyDump()" title="Скопировать дамп таблицы как в Excel (для сверки)">📋 Скопировать</button>` : ''}</div>
 <div class="tabs">
   ${canCalc ? tabBtn('калькулятор','Калькулятор') : ''}
-  ${canMisc ? tabBtn('расчёт','Расчёт') : ''}
+  ${canMisc || role.finance8 ? tabBtn('расчёт','Расчёт') : ''}
   ${canMisc ? tabBtn('справочник','Справочник') : ''}
   ${role.editMatrix ? tabBtn('матрицы','Матрицы') : ''}
   ${role.editMatrix ? tabBtn('матрица-к','Матрица К') : ''}
   ${role.debug ? tabBtn('итог','ИТОГ') : ''}
 </div>
 ${canCalc ? calcFormHtml(role, data, q, result, flash) : ''}
-${canMisc ? calcTab(result, q, data) : ''}
+${canMisc ? calcTab(result, q, data).replace('</h2>', '</h2>' + (role.finance8 ? finance8.rates() : '')) : role.finance8 ? '<div class="card" id="tab-расчёт">' + finance8.rates() + '</div>' : ''}
 ${canMisc ? spravTab(role) : ''}
 ${role.editMatrix ? matrixTab(role, data, q) : ''}
 ${role.editMatrix ? matrixKTab(role) : ''}
@@ -1292,10 +1297,16 @@ ${role.debug ? itogTab(data, q, dateStr) : ''}
 ${JS.replace('__INIT_TAB__', JSON.stringify(cur))
     .replace('__DEBUG__', role.debug ? 'true' : 'false')
     .replace('__DUMP__', JSON.stringify(dumpStr).replace(/<\//g, '<\\/'))}
+${role.finance8 ? finance8.client : ''}
 </script></body></html>`;
 }
 
 const CSS = `
+#finance8 input,#finance8-rates input{max-width:100%;box-sizing:border-box;padding:7px;border:1px solid #B9C4D4;border-radius:3px;background:#D1E5F4}
+#finance8 td:first-child{width:65%}
+#finance8 [data-fin-out="net"],#finance8 [data-fin-out="perM2"]{background:#FFF2C1;font-weight:bold}
+#finance8-rates label{display:inline-block;margin:8px}
+
 :root{
   --brand:#0A5A79;          /* заголовочная плашка Excel */
   --brand-grad:#0E6A8F;
@@ -1857,6 +1868,7 @@ const server = http.createServer((req, res) => {
     if (MATRIX_USERS.includes(idNum)) caps.add('6'); // роль 6 (матрицы) — серверно, независимо от внешнего сервиса
     if (FOUNDER_USERS.includes(idNum)) caps.add('7'); // роль 7 (учредители) — серверно, независимо от внешнего сервиса
     const role = roleFromCaps(caps, idNum, (idNum && USERS[String(idNum)]) || u.name);
+    if (req.method === 'POST' && url.pathname === '/save-finance8') return finance8.save(req, res, role);
     const data = currentData();
 
     if (req.method === 'POST' && url.pathname === '/save') {
