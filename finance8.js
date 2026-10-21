@@ -56,7 +56,7 @@ function block(q,result) {
  <div class="f8-label f8-net-label">Итоговая стоимость квартиры, ₽</div>
  <div class="f8-value f8-net" data-fin-out="net">${fmt(computed.net,0)}</div>
  <div class="f8-label f8-meter-label">Стоимость квартиры по договору без отделки, ₽/кв. м</div>
- <div class="f8-value f8-meter" data-fin-out="perM2">${fmt(computed.perM2)}</div>
+ <div class="f8-value f8-meter" data-fin-out="perM2">${fmt(computed.perM2 == null ? null : Math.trunc(computed.perM2),0)}</div>
  </div></div>
  <div class="f8-actions"><button type="button" class="btn" id="fin-save">Сохранить финансовые данные</button> <span id="fin-status" role="status"></span></div>
  <p class="hint f8-note">Скидка сохраняется справочно и не вычитается из итога.</p></section>`;
@@ -96,7 +96,7 @@ const client=`(function(){
  function number(value){if(value===''||value==null)return null;var n=Number(value);if(!Number.isFinite(n)||n<0)throw Error('Введите неотрицательное число');return n;}
  function input(){var values={};box.querySelectorAll('[data-fin-input]').forEach(function(el){if(el.validity.badInput)throw Error('Некорректное число');values[el.dataset.finInput]=number(el.value);});return values;}
  function status(text){document.getElementById('fin-status').textContent=text;}
- function recompute(){try{var values=input();var sale=values.sale,down=values.down||0,subsidy=values.subsidy||0;var area=number(box.dataset.area),cost=number(box.dataset.cost);var agentRate=number(box.dataset.agent), overheadRate=number(box.dataset.overhead);var out={agent:null,overhead:null,net:null,perM2:null};if(sale!==null&&area>0&&cost!==null&&agentRate!==null&&overheadRate!==null){out.agent=(sale-down)*agentRate;out.overhead=overheadRate*area;out.net=sale-down-subsidy-out.agent-out.overhead-cost;out.perM2=out.net/area;}Object.keys(out).forEach(function(k){box.querySelector('[data-fin-out="'+k+'"]').textContent=out[k]===null?'—':out[k].toLocaleString('ru-RU',{minimumFractionDigits:k==='perM2'?2:0,maximumFractionDigits:k==='perM2'?2:0});});}catch(e){box.querySelectorAll('[data-fin-out]').forEach(function(el){el.textContent='—';});status(e.message);}}
+ function recompute(){try{var values=input();var sale=values.sale,down=values.down||0,subsidy=values.subsidy||0;var area=number(box.dataset.area),cost=number(box.dataset.cost);var agentRate=number(box.dataset.agent), overheadRate=number(box.dataset.overhead);var out={agent:null,overhead:null,net:null,perM2:null};if(sale!==null&&area>0&&cost!==null&&agentRate!==null&&overheadRate!==null){out.agent=(sale-down)*agentRate;out.overhead=overheadRate*area;out.net=sale-down-subsidy-out.agent-out.overhead-cost;out.perM2=out.net/area;}Object.keys(out).forEach(function(k){box.querySelector('[data-fin-out="'+k+'"]').textContent=out[k]===null?'—':(k==='perM2'?Math.trunc(out[k]):out[k]).toLocaleString('ru-RU',{minimumFractionDigits:0,maximumFractionDigits:0});});}catch(e){box.querySelectorAll('[data-fin-out]').forEach(function(el){el.textContent='—';});status(e.message);}}
  async function save(payload){var response=await fetch('./save-finance8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Ошибка сохранения');}
  async function saveCase(){await save(Object.assign({kind:'case',context:JSON.parse(box.dataset.context)},input()));dirty=false;status('Сохранено');}
  box.addEventListener('input',function(e){if(e.target.matches('[data-fin-input]')){dirty=true;status('Не сохранено');recompute();}});
