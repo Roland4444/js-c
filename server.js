@@ -575,6 +575,7 @@ function bathPerim(ssu) {
 }
 const r2 = v => Math.round(v * 100) / 100;
 const rub = v => new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const rub0 = v => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(v);
 const rub2 = v => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(v);
 
 function compute(data, project, planning, vid, scenario, srok, rent, dateStr) {
@@ -986,8 +987,8 @@ function calcFormHtml(role, data, q, result, flash) {
 
   // стоимость — отдельная соседняя таблица
   const costTable = `<table class="cost-tbl"><tbody><tr>
-      <td class="c-lbl">Стоимость пакета<br>отделки, ₽</td><td class="c-val">${result ? rub2(result.sale) : '—'}</td>
-      <td class="c-lbl">Стоимость пакета<br>отделки, ₽/1 кв м</td><td class="c-val">${result ? rub2(result.per_m2) : '—'}</td>
+      <td class="c-lbl">Стоимость пакета<br>отделки, ₽</td><td class="c-val">${result ? rub0(result.sale) : '—'}</td>
+      <td class="c-lbl">Стоимость пакета<br>отделки, ₽/1 кв м</td><td class="c-val">${result ? rub0(result.per_m2) : '—'}</td>
     </tr></tbody></table>`;
 
   const detailFullTable = (res, role, qq, ktot) => {
@@ -1276,6 +1277,8 @@ function page(uid, role, data, q, result, flash, tab) {
 <title>Калькулятор отделки</title>
 <style>
 ${CSS}
+#finance8 .f8-label,.cost-tbl .c-lbl{font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700}
+#finance8 .f8-value,.cost-tbl .c-val{font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
 </style></head><body ${ctx} class="${role.admin?'admin':''}${role.debug?' dbg':''}">
 <div class="top"><div class="brand">🧮 Калькулятор отделки</div>${role.debug ? `<button id="copybtn" class="copyred" onclick="copyDump()" title="Скопировать дамп таблицы как в Excel (для сверки)">📋 Скопировать</button>` : ''}</div>
 <div class="tabs">
