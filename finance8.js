@@ -40,58 +40,51 @@ const fmt = v=>v==null?'—':Number(v).toLocaleString('ru-RU',{minimumFractionDi
 function block(q,result) {
  const input=get(q),rates=state.rates,area=result?result.S:null,cost=result?result.totalCost:null;
  const computed=calculate(input,rates,area,cost);
- const field=(label,k,hint='')=>`<div class="f8-field"><label for="fin-${k}">${label}</label><div class="f8-input"><input id="fin-${k}" aria-label="${label}" type="number" min="0" step="0.01" data-fin-input="${k}" value="${esc(input[k])}"><span>₽</span></div>${hint?`<small>${hint}</small>`:''}</div>`;
- const line=(label,k,tip)=>`<div class="f8-line" title="${tip}"><span>${label}</span><strong><span data-fin-out="${k}">${fmt(computed[k])}</span> ₽</strong></div>`;
+ const field=(label,k,row)=>`<label class="f8-label f8-expense" style="grid-row:${row}" for="fin-${k}">${label}</label><div class="f8-value" style="grid-row:${row}"><input id="fin-${k}" aria-label="${label}" type="number" min="0" step="0.01" data-fin-input="${k}" value="${esc(input[k])}"></div>`;
+ const out=(label,k,row)=>`<div class="f8-label f8-expense" style="grid-row:${row}">${label}</div><div class="f8-value" style="grid-row:${row}" data-fin-out="${k}">${fmt(computed[k])}</div>`;
  return `<section id="finance8" data-context="${esc(JSON.stringify([q.project,q.planning,q.vid]))}" data-area="${esc(area)}" data-cost="${esc(cost)}" data-agent="${rates.agent}" data-overhead="${rates.overhead}">
- <header class="f8-header"><div><h2>Стоимость квартиры</h2><p>Условия сделки и результат после вычета расходов</p></div><span class="f8-badge">Финансовый расчёт</span></header>
- <div class="f8-layout"><section class="f8-panel"><h3>Условия сделки</h3><p class="f8-muted">Введите суммы — результат обновится автоматически.</p>
- ${field('Стоимость квартиры по договору','sale')}${field('Первоначальный взнос','down')}${field('Субсидия','subsidy')}${field('Скидка','discount','Справочно · не учтена в итоге')}
- <div class="f8-actions"><button type="button" class="btn" id="fin-save">Сохранить данные</button><span id="fin-status" role="status"></span></div></section>
- <section class="f8-panel f8-results"><h3>Результат расчёта</h3><div class="f8-hero"><span>Итоговая стоимость квартиры</span><div><strong data-fin-out="net">${fmt(computed.net)}</strong><span> ₽</span></div></div>
- <div class="f8-meter"><span>Без отделки за 1 м²</span><strong><span data-fin-out="perM2">${fmt(computed.perM2)}</span> ₽/м²</strong></div>
- <h4>Что вычитается из стоимости</h4>
- <div class="f8-line"><span>Первоначальный взнос</span><strong><span data-fin-copy="down">${fmt(input.down||0)}</span> ₽</strong></div>
- <div class="f8-line"><span>Субсидия</span><strong><span data-fin-copy="subsidy">${fmt(input.subsidy||0)}</span> ₽</strong></div>
- ${line('Агентское вознаграждение','agent','(Стоимость по договору − первоначальный взнос) × ставка')}
- ${line('Накладные расходы','overhead','Ставка накладных расходов × площадь квартиры')}
- <div class="f8-line"><span>Себестоимость отделки</span><strong>${fmt(cost)} ₽</strong></div>
- <p class="f8-muted">Площадь: ${fmt(area)} м². Ставки редактируются во вкладке «Расчёт». При незаполненной стоимости или нулевой площади итог не рассчитывается.</p>
- </section></div></section>`;
+ <div class="f8-scroll"><div class="f8-grid">
+ ${field('Сумма первоначального взноса*','down',1)}
+ ${field('Сумма субсидии, ₽','subsidy',2)}
+ ${out('Агентское вознаграждение, ₽','agent',3)}
+ ${out('Накладные расходы, ₽','overhead',4)}
+ ${field('Скидка, ₽','discount',5)}
+ <div class="f8-empty" aria-hidden="true"></div>
+ <div class="f8-title">СТОИМОСТЬ КВАРТИРЫ</div>
+ <label class="f8-label f8-sale-label" for="fin-sale">Стоимость квартиры по договору, ₽</label>
+ <div class="f8-value f8-sale"><input id="fin-sale" aria-label="Стоимость квартиры по договору, ₽" type="number" min="0" step="0.01" data-fin-input="sale" value="${esc(input.sale)}"></div>
+ <div class="f8-label f8-net-label">Итоговая стоимость квартиры, ₽</div>
+ <div class="f8-value f8-net" data-fin-out="net">${fmt(computed.net)}</div>
+ <div class="f8-label f8-meter-label">Стоимость квартиры по договору без отделки, ₽/кв. м</div>
+ <div class="f8-value f8-meter" data-fin-out="perM2">${fmt(computed.perM2)}</div>
+ </div></div>
+ <div class="f8-actions"><button type="button" class="btn" id="fin-save">Сохранить финансовые данные</button> <span id="fin-status" role="status"></span></div>
+ <p class="hint f8-note">Скидка сохраняется справочно и не вычитается из итога.</p></section>`;
 }
 const css=`
-#finance8{margin:20px 14px;font:14px/1.45 Arial,sans-serif;color:#1e293b}
-#finance8 *{box-sizing:border-box}
-#finance8 .f8-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
-#finance8 h2,#finance8 h3,#finance8 h4{margin:0;color:#17354b;background:none;border:0;padding:0}
-#finance8 h2{font-size:22px}#finance8 h3{font-size:17px}#finance8 h4{font-size:13px;margin:24px 0 8px}
-#finance8 .f8-header p{margin:5px 0 0;color:#64748b}
-#finance8 .f8-badge{background:#e8f2f4;color:#0a5a79;border-radius:20px;padding:6px 12px;font-size:12px;white-space:nowrap}
-#finance8 .f8-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:stretch}
-#finance8 .f8-panel{min-width:0;padding:24px;background:#fff;border:1px solid #dce4eb;border-radius:14px}
-#finance8 .f8-muted{font-size:12px;line-height:1.6;color:#64748b;margin:8px 0 20px}
-#finance8 .f8-field{margin:18px 0}
-#finance8 .f8-field label{display:block;text-align:right;font-size:13px;font-weight:600;color:#334155;margin-bottom:7px}
-#finance8 .f8-input{position:relative}
-#finance8 input[type=number]{display:block;width:100%;min-width:0;max-width:100%;padding:12px 36px 12px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#172b3a;font:600 17px/1.3 Arial,sans-serif;text-align:right;appearance:textfield;-moz-appearance:textfield}
-#finance8 .f8-input>span{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#64748b}
+#finance8{margin:10px 14px;font-family:Arial,sans-serif}
+#finance8 .f8-scroll{overflow-x:auto}
+#finance8 .f8-grid{display:grid;grid-template-columns:82fr 115.25fr 159fr 129.25fr 154.66fr 62.75fr 92.5fr 115.25fr 119.66fr 106.5fr 119.66fr 124.91fr;grid-template-rows:repeat(5,minmax(40px,auto)) repeat(2,minmax(48px,auto));min-width:850px;border-top:1px solid #97A2B3;border-left:1px solid #97A2B3}
+#finance8 .f8-grid>*{box-sizing:border-box;border-right:1px solid #97A2B3;border-bottom:1px solid #97A2B3;display:flex;align-items:center;min-width:0;margin:0}
+#finance8 .f8-label{padding:8px 10px;background:#F2F4F7;color:#0F3372;font-size:12px;font-weight:700;justify-content:flex-end;text-align:right;line-height:1.3}
+#finance8 .f8-grid .f8-label{display:block!important;text-align:right!important;align-content:center;justify-self:stretch;padding:8px 10px!important}
+#finance8 .f8-expense{grid-column:1/6}
+#finance8 .f8-value{grid-column:6/8;justify-content:flex-end;background:#28496D;color:white;font-size:17px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;padding:6px;overflow-wrap:anywhere}
+#finance8 input[type=number]{width:100%;max-width:100%;box-sizing:border-box;min-width:0;border:1px solid transparent;border-radius:0;background:#28496D;color:white;text-align:right;font:inherit;padding:3px;appearance:textfield;-moz-appearance:textfield}
 #finance8 input::-webkit-inner-spin-button,#finance8 input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-#finance8 input:focus{outline:3px solid #c8e7ed;outline-offset:1px;border-color:#0a5a79;background:white}
-#finance8 .f8-field small{display:block;text-align:right;color:#64748b;margin-top:5px;font-size:11px}
-#finance8 .f8-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px}
-#finance8 .f8-actions .btn{border:0;border-radius:8px;background:#0a5a79;color:white;padding:11px 16px;font-weight:600;cursor:pointer}
-#finance8 #fin-status{font-size:12px;color:#475569}
-#finance8 .f8-hero{margin-top:18px;padding:20px;background:#eef6f7;border:1px solid #d4e7ea;border-radius:10px;text-align:right}
-#finance8 .f8-hero>span{font-size:13px;color:#43606b}
-#finance8 .f8-hero>div{margin-top:8px;font-size:clamp(22px,2.3vw,32px);color:#0a4d62;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-#finance8 .f8-meter{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid #e2e8f0;font-size:13px}
-#finance8 .f8-meter strong{text-align:right;font-size:17px;color:#17354b;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-#finance8 .f8-line{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #eef2f6;font-size:13px}
-#finance8 .f8-line>span{text-align:right;flex:1;color:#64748b}
-#finance8 .f8-line strong{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-#finance8-rates input{max-width:100%;box-sizing:border-box;padding:9px;border:1px solid #cbd5e1;border-radius:7px;background:#f8fafc;text-align:right}
+#finance8 input:focus{outline:2px solid #fff;outline-offset:-2px}
+#finance8 .f8-empty{grid-column:8/13;grid-row:1/6;background:#F2F4F7}
+#finance8 .f8-title{grid-column:1/3;grid-row:6/8;background:#0A5A79;color:white;padding:10px;text-align:center;justify-content:center;font-size:13px;font-weight:700}
+#finance8 .f8-sale-label{grid-column:3/6;grid-row:6}
+#finance8 .f8-sale{grid-row:6}
+#finance8 .f8-net-label{grid-column:3/6;grid-row:7}
+#finance8 .f8-net{grid-row:7;background:#CC0000}
+#finance8 .f8-meter-label{grid-column:8/11;grid-row:6/8}
+#finance8 .f8-meter{grid-column:11/13;grid-row:6/8;background:#CC0000;font-size:15px}
+#finance8 .f8-actions{display:flex;align-items:center;gap:10px;padding-top:10px}
+#finance8 .f8-note{margin:8px 0}
+#finance8-rates input{max-width:100%;box-sizing:border-box;padding:7px;border:1px solid #B9C4D4;border-radius:3px;background:#D1E5F4}
 #finance8-rates label{display:inline-block;margin:8px}
-@media(max-width:900px){#finance8 .f8-layout{grid-template-columns:minmax(0,1fr)}#finance8 .f8-panel{padding:18px}#finance8 .f8-header{align-items:flex-start}#finance8 .f8-badge{white-space:normal;text-align:right}}
-@media(max-width:480px){#finance8{margin:16px 8px}#finance8 .f8-header{display:block}#finance8 .f8-badge{display:inline-block;margin-top:10px}#finance8 .f8-meter{align-items:flex-start;flex-direction:column}#finance8 .f8-line{gap:8px;flex-wrap:wrap}#finance8 .f8-hero>div{font-size:25px}}
 `;
 
 function rates() {return `<section class="card" id="finance8-rates"><h2>Финансовые ставки — роль 8</h2><label>Агентское вознаграждение, % <input type="number" min="0" max="100" step="any" id="fin-rate-agent" value="${state.rates.agent*100}"></label> <label>Накладные расходы, ₽/м² <input type="number" min="0" step="any" id="fin-rate-overhead" value="${state.rates.overhead}"></label><p class="hint">Общие ставки для финансового блока роли 8. Коэффициенты отделки не изменяются.</p><button class="btn" type="button" id="fin-rates-save">Сохранить ставки</button> <span id="fin-rates-status" role="status"></span></section>`;}
@@ -101,7 +94,7 @@ const client=`(function(){
  function number(value){if(value===''||value==null)return null;var n=Number(value);if(!Number.isFinite(n)||n<0)throw Error('Введите неотрицательное число');return n;}
  function input(){var values={};box.querySelectorAll('[data-fin-input]').forEach(function(el){if(el.validity.badInput)throw Error('Некорректное число');values[el.dataset.finInput]=number(el.value);});return values;}
  function status(text){document.getElementById('fin-status').textContent=text;}
- function recompute(){try{var values=input();var sale=values.sale,down=values.down||0,subsidy=values.subsidy||0;var area=number(box.dataset.area),cost=number(box.dataset.cost);box.querySelectorAll('[data-fin-copy]').forEach(function(el){el.textContent=(values[el.dataset.finCopy]||0).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});});var agentRate=number(box.dataset.agent), overheadRate=number(box.dataset.overhead);var out={agent:null,overhead:null,net:null,perM2:null};if(sale!==null&&area>0&&cost!==null&&agentRate!==null&&overheadRate!==null){out.agent=(sale-down)*agentRate;out.overhead=overheadRate*area;out.net=sale-down-subsidy-out.agent-out.overhead-cost;out.perM2=out.net/area;}Object.keys(out).forEach(function(k){box.querySelector('[data-fin-out="'+k+'"]').textContent=out[k]===null?'—':out[k].toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});});}catch(e){box.querySelectorAll('[data-fin-out]').forEach(function(el){el.textContent='—';});status(e.message);}}
+ function recompute(){try{var values=input();var sale=values.sale,down=values.down||0,subsidy=values.subsidy||0;var area=number(box.dataset.area),cost=number(box.dataset.cost);var agentRate=number(box.dataset.agent), overheadRate=number(box.dataset.overhead);var out={agent:null,overhead:null,net:null,perM2:null};if(sale!==null&&area>0&&cost!==null&&agentRate!==null&&overheadRate!==null){out.agent=(sale-down)*agentRate;out.overhead=overheadRate*area;out.net=sale-down-subsidy-out.agent-out.overhead-cost;out.perM2=out.net/area;}Object.keys(out).forEach(function(k){box.querySelector('[data-fin-out="'+k+'"]').textContent=out[k]===null?'—':out[k].toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});});}catch(e){box.querySelectorAll('[data-fin-out]').forEach(function(el){el.textContent='—';});status(e.message);}}
  async function save(payload){var response=await fetch('./save-finance8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'Ошибка сохранения');}
  async function saveCase(){await save(Object.assign({kind:'case',context:JSON.parse(box.dataset.context)},input()));dirty=false;status('Сохранено');}
  box.addEventListener('input',function(e){if(e.target.matches('[data-fin-input]')){dirty=true;status('Не сохранено');recompute();}});
