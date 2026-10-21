@@ -986,7 +986,7 @@ function calcFormHtml(role, data, q, result, flash) {
   </tbody></table>`;
 
   // стоимость — отдельная соседняя таблица
-  const costTable = `<table class="cost-tbl"><tbody><tr>
+  const costTable = `<table class="cost-tbl"><colgroup><col style="width:20%"><col style="width:26%"><col style="width:28%"><col style="width:26%"></colgroup><tbody><tr>
       <td class="c-lbl">Стоимость пакета<br>отделки, ₽</td><td class="c-val">${result ? rub0(result.sale) : '—'}</td>
       <td class="c-lbl">Стоимость пакета<br>отделки, ₽/1 кв м</td><td class="c-val">${result ? rub0(result.per_m2) : '—'}</td>
     </tr></tbody></table>`;
@@ -1478,12 +1478,12 @@ form.xls{max-width:1640px;padding:0;overflow:visible;border-radius:8px}
 .vid-dd .vid-opt:hover{background:var(--headbar)}
 .vid-dd .vid-opt.on{background:#eef2ff;font-weight:700}
 /* таблица стоимости (отдельный соседний div) */
-.cost-tbl{border-collapse:collapse;white-space:nowrap;height:100%;width:100%}
+.cost-tbl{table-layout:fixed;border-collapse:collapse;white-space:nowrap;height:100%;width:100%}
 .cost-tbl td{border:1px solid var(--brand);padding:8px 6px;vertical-align:middle;height:1px}
 .cost-tbl .c-lbl{background:var(--brand);color:#fff;font-weight:700;font-size:11px;text-align:center;
-  line-height:1.3;white-space:normal;width:50%;padding:10px 5px}
+  line-height:1.3;white-space:normal;padding:10px 5px}
 .cost-tbl .c-val{background:var(--result);color:#D1382D;font-weight:800;font-size:14px;text-align:center;
-  white-space:normal;width:50%;padding:6px 4px}
+  white-space:normal;padding:6px 4px}
 .xls-sec{background:var(--brand);color:#fff;font-weight:800;font-size:14px;letter-spacing:.3px;
   text-align:center;padding:8px 12px;margin:14px 10px 8px;border-radius:4px}
 /* на узких/средних ширинах правая колонка стоимости складывается под параметры,
